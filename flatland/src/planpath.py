@@ -43,13 +43,13 @@ def check_action(agent, action, state, env: RailEnv):
       return False
 
   if status == AgentStatus.OUTSIDE:
-    if action == 0:
+    if action == RailEnvActions.DO_NOTHING:
       return  {
       'x': x,
       'y': y,
       'direction': direction,
       'status': status}
-    elif action == 2: 
+    elif action == RailEnvActions.MOVE_FORWARD: 
       if is_cell_free((y,x), state):
         return {
       'x': x,
@@ -61,10 +61,7 @@ def check_action(agent, action, state, env: RailEnv):
     else:
       return False
 
-  if status == AgentStatus.STATIONARY and action == 4:
-      return False
-
-  if action == 0:
+  if action == RailEnvActions.DO_NOTHING:
     if status == AgentStatus.MOVING:
       return False
     else:
@@ -74,12 +71,15 @@ def check_action(agent, action, state, env: RailEnv):
       'direction': direction,
       'status': status}
 
-  if action == 4:
-    return {
-      'x': x,
-      'y': y,
-      'direction': direction,
-      'status': AgentStatus.STATIONARY}
+  if action == RailEnvActions.STOP_MOVING:
+    if status == AgentStatus.STATIONARY:
+      return False
+    else:
+      return {
+        'x': x,
+        'y': y,
+        'direction': direction,
+        'status': AgentStatus.STATIONARY}
 
   transition_valid = None
   possible_transitions = env.rail.get_transitions(y, x, direction)
@@ -136,7 +136,6 @@ def check_action(agent, action, state, env: RailEnv):
     return False
 
 def is_cell_free(pos, state):
-  print(pos, state)
   x, y = pos[1], pos[0]
   for a in state:
     if a == None:
@@ -159,55 +158,55 @@ def get_new_position(position, movement):
 
 def get_neighbours(node: Node, env: RailEnv):
   n = len(env.get_agent_handles())
-  possibilities = [[] for _ in range(n)]
+  possibilities = []
   goal = get_trains_goal_state(env)
 
-  # def get_neighbours_for_agent(state, actions, i):
-  #   if i == n:
-  #     possibilities.append((state, actions))
-  #     return
-  #   #agent_next = []
-  #   agent = node.state[i]
-  #   for action in range(0, 5):
-  #     ok = check_action(agent, action, state, env)
-  #     if not ok:
-  #       continue
-  #     else:
-  #       if compare_positions(ok, goal[i]):
-  #         ok['status'] = AgentStatus.DONE
-  #       s = state[:]
-  #       a = actions[:]
-  #       s[i] = ok
-  #       a[i] = action
-  #       get_neighbours_for_agent(s, a, i+1)
-  #       #agent_next.append(ok)
-  #   # for step in agent_next:
-  #   #   s = state[:]
-  #   #   s[i] = step
-  #   #   get_neighbours_for_agent(s, i+1)
+  def get_neighbours_for_agent(state, actions, i):
+    if i == n:
+      possibilities.append((state, actions))
+      return
+    #agent_next = []
+    agent = node.state[i]
+    for action in range(0, 5):
+      ok = check_action(agent, action, state, env)
+      if not ok:
+        continue
+      else:
+        if compare_positions(ok, goal[i]):
+          ok['status'] = AgentStatus.DONE
+        s = state[:]
+        a = actions[:]
+        s[i] = ok
+        a[i] = action
+        get_neighbours_for_agent(s, a, i+1)
+        #agent_next.append(ok)
+    # for step in agent_next:
+    #   s = state[:]
+    #   s[i] = step
+    #   get_neighbours_for_agent(s, i+1)
 
-  # get_neighbours_for_agent([None]*n, [None]*n, 0)
-  # neighbours = []
-  # for states, state_actions in possibilities:
-  #   neighbours.append(Node(states, node, state_actions))
-  # return neighbours
-
-  for i, agent in enumerate(node.state):
-      for action in range(0, 5):
-        ok = check_action(agent, action, node.state, env)
-        if not ok:
-          continue
-        else:
-          if compare_positions(ok, goal[i]):
-            ok['status'] = AgentStatus.DONE
-          possibilities[i].append((action, ok))
-  
+  get_neighbours_for_agent([None]*n, [None]*n, 0)
   neighbours = []
-  for p in itertools.product(*possibilities):
-    z = list(zip(*p))
-    actions, states = list(z[0]), list(z[1])
-    neighbours.append(Node(states, node, actions))
+  for states, state_actions in possibilities:
+    neighbours.append(Node(states, node, state_actions))
   return neighbours
+
+  # for i, agent in enumerate(node.state):
+  #     for action in range(0, 5):
+  #       ok = check_action(agent, action, node.state, env)
+  #       if not ok:
+  #         continue
+  #       else:
+  #         if compare_positions(ok, goal[i]):
+  #           ok['status'] = AgentStatus.DONE
+  #         possibilities[i].append((action, ok))
+  
+  # neighbours = []
+  # for p in itertools.product(*possibilities):
+  #   z = list(zip(*p))
+  #   actions, states = list(z[0]), list(z[1])
+  #   neighbours.append(Node(states, node, actions))
+  # return neighbours
 
 
 def get_manhattan_distance(posA, posB):
