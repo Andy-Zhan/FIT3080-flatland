@@ -14,9 +14,9 @@ import planpath
 
 def evalfun(debug = False, refresh = 0.1):
     # A list of (mapsize, agent count) tuples, change or extend this to test different sizes.
-    problemsizes = [(5,4)]
+    problemsizes = [(8,5)]
     
-    _seed = 4
+    _seed = 1
     
     print("%10s\t%8s\t%9s" % ("Dimensions", "Success", "Runtime"))
     for problemsize in problemsizes:
