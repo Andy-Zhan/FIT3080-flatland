@@ -24,7 +24,7 @@ class Node:
   def __eq__(self, other):
     return self.state == other.state
 
-def check_action(agent, i, action, state, node_state, env: RailEnv):
+def check_action(agent, action, state, env: RailEnv):
 
   x = agent['x']
   y = agent['y']
@@ -49,7 +49,7 @@ def check_action(agent, i, action, state, node_state, env: RailEnv):
       'direction': direction,
       'status': status}
     elif action == RailEnvActions.MOVE_FORWARD: 
-      if is_cell_free((y,x), i, state, node_state):
+      if is_cell_free((y,x), state):
         return {
       'x': x,
       'y': y,
@@ -121,7 +121,7 @@ def check_action(agent, i, action, state, node_state, env: RailEnv):
   if new_cell_valid:
       # Check the new position is not the same as any of the existing agent positions
       # (including itself, for simplicity, since it is moving)
-      cell_free = is_cell_free(new_position, i, state, node_state)
+      cell_free = is_cell_free(new_position, state)
   else:
       # if new cell is outside of scene -> cell_free is False
       cell_free = False
@@ -134,17 +134,11 @@ def check_action(agent, i, action, state, node_state, env: RailEnv):
   else:
     return False
 
-def is_cell_free(pos, i, state, parent_state):
+def is_cell_free(pos, state):
   x, y = pos[1], pos[0]
   for a in state:
-    if a == None:
-      break
-    else:
-      if a['x'] == x and a['y'] == y and a['status'] != AgentStatus.DONE and a['status'] != AgentStatus.OUTSIDE:
-        return False
-  for k, a in enumerate(parent_state):
-    if k != i and a['x'] == x and a['y'] == y and a['status'] != AgentStatus.DONE and a['status'] != AgentStatus.OUTSIDE:
-        return False
+    if a['x'] == x and a['y'] == y and a['status'] != AgentStatus.DONE and a['status'] != AgentStatus.OUTSIDE:
+      return False
   return True
 
 def get_new_position(position, movement):
@@ -167,10 +161,9 @@ def get_neighbours(node: Node, env: RailEnv):
     if i == n:
       possibilities.append((state, actions))
       return
-    #agent_next = []
     agent = node.state[i]
     for action in range(0, 5):
-      ok = check_action(agent, i, action, state, node.state, env)
+      ok = check_action(agent, action, state, env)
       if not ok:
         continue
       else:
@@ -182,7 +175,7 @@ def get_neighbours(node: Node, env: RailEnv):
         a[i] = action
         get_neighbours_for_agent(s, a, i+1)
 
-  get_neighbours_for_agent([None]*n, [None]*n, 0)
+  get_neighbours_for_agent(node.state, [None]*n, 0)
   neighbours = []
   for states, state_actions in possibilities:
     neighbours.append(Node(states, node, state_actions))
