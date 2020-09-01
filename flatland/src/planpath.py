@@ -205,6 +205,12 @@ def get_trains_goal_state(env: RailEnv):
 
 
 def search(env: RailEnv):
+  '''
+  Runs multi-agent A* search.
+  Uses the maximum manhattan distance across all agents as the heuristic.
+  The tie-breaker used is the h-value of the node, as we want to search the nodes with 
+  a lower h-value (closer to the goal) first when we encounter multiple with the same f-value.
+  '''
   schedule = []
 
   initial_node = Node(get_trains_initial_state(env))
